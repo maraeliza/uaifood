@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -22,7 +22,7 @@ enum PaymentMethod {
 }
 
 enum UserType {
-  CLIENT 
+  CLIENT
   ADMIN
 }
 
@@ -36,22 +36,29 @@ model Address {
   zipCode   String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+  User      User[]
 }
 
 model Order {
-  id            Int      @id @default(autoincrement())
-  client        User
+  id            Int           @id @default(autoincrement())
+  client        User          @relation("ClientOrders", fields: [clientId], references: [id])
+  clientId      Int
   paymentMethod PaymentMethod
   status        String
-  createdBy     User
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-
+  createdBy     User          @relation("CreatedOrders", fields: [createdById], references: [id])
+  createdById   Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  OrderItem     OrderItem[]
 }
+
 model OrderItem {
-  order Order
-  quantity Int
-  List item
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   Int
+  quantity  Int
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
@@ -61,23 +68,30 @@ model Category {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
+  Item        Item[]
 }
 
 model Item {
-  id         Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   description String
-  unitPrice   Double
-  category    Category
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  unitPrice   Float
+  category    Category    @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now())
+  OrderItem   OrderItem[]
+  categoryId  Int
 }
 
 model User {
   id        Int      @id @default(autoincrement())
   name      String
-  address   Address
+  address   Address  @relation(fields: [addressId], references: [id])
+  addressId Int
   phone     String
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  clientOrders  Order[] @relation("ClientOrders")
+  createdOrders Order[] @relation("CreatedOrders")
 }

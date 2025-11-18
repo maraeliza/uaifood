@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Query,
+  Get,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { PageableDto, PageDto } from '../pagination/pageable.dto';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { BaseController } from '../common/base.controller';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './entities/category.entity';
 
-@Controller('category')
-export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
-
-  @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+class FindAllCategoriesDto extends PageableDto {
+  constructor(partial: Partial<FindAllCategoriesDto>) {
+    super();
+    Object.assign(this, partial);
+  }
+  description?: string;
+}
+@ApiTags('Categories')
+@Controller('categories')
+export class CategoryController extends BaseController<
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto
+> {
+  constructor(private readonly categoryService: CategoryService) {
+    super(categoryService, 'Category');
   }
 
   @Get()
-  findAll() {
-    return this.categoryService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoryService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(+id, updateCategoryDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoryService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Lista todas as categorias de forma paginada',
+    type: PageDto,
+  })
+  async findAll(@Query() query: FindAllCategoriesDto) {
+    const { page, limit, ...filters } = query;
+    return this.categoryService.findAllCategories({ page, limit }, filters);
   }
 }

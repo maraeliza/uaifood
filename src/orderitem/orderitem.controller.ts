@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OrderitemService } from './orderitem.service';
-import { CreateOrderitemDto } from './dto/create-orderitem.dto';
-import { UpdateOrderitemDto } from './dto/update-orderitem.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  HttpStatus,
+  HttpCode,
+  Query,
+} from '@nestjs/common';
+import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
+import { BaseController } from '../common/base.controller';
+import { PageableDto, PageDto } from '../pagination/pageable.dto';
+import { OrderItem } from 'generated/prisma';
+import { CreateOrderItemDto } from './dto/create-orderitem.dto';
+import { OrderItemService } from './orderitem.service';
 
-@Controller('orderitem')
-export class OrderitemController {
-  constructor(private readonly orderitemService: OrderitemService) {}
+class FindAllOrderItemsDto extends PageableDto {
+  orderId?: number;
+}
 
-  @Post()
-  create(@Body() createOrderitemDto: CreateOrderitemDto) {
-    return this.orderitemService.create(createOrderitemDto);
+@ApiTags('OrderItems')
+@Controller('order-items')
+export class OrderItemController extends BaseController<
+  OrderItem,
+  CreateOrderItemDto,
+  CreateOrderItemDto
+> {
+  constructor(private readonly orderItemService: OrderItemService) {
+    super(orderItemService, 'OrderItem');
   }
 
   @Get()
-  findAll() {
-    return this.orderitemService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderitemService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderitemDto: UpdateOrderitemDto) {
-    return this.orderitemService.update(+id, updateOrderitemDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.orderitemService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Lista os itens dos pedidos de forma paginada',
+    type: PageDto,
+  })
+  async findAll(@Query() query: FindAllOrderItemsDto) {
+    const { page, limit, ...filters } = query;
+    return this.orderItemService.findAll({ page, limit }, filters);
   }
 }

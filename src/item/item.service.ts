@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateItemDto } from './dto/create-item.dto';
-import { UpdateItemDto } from './dto/update-item.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Item } from './entities/item.entity';
+import { PageableDto } from '../pagination/pageable.dto';
+import { BaseService } from '../common/base.service';
 
 @Injectable()
-export class ItemService {
-  create(createItemDto: CreateItemDto) {
-    return 'This action adds a new item';
+export class ItemService extends BaseService<Item, PrismaService['item']> {
+  constructor(prisma: PrismaService) {
+    super(prisma, prisma.item);
   }
 
-  findAll() {
-    return `This action returns all item`;
-  }
+  async findAllItems(
+    pageable: PageableDto,
+    filters?: { description?: string; categoryId?: number },
+  ) {
+    const where = {
+      description: filters?.description
+        ? { contains: filters.description, mode: 'insensitive' }
+        : undefined,
+      categoryId: filters?.categoryId ?? undefined,
+    };
 
-  findOne(id: number) {
-    return `This action returns a #${id} item`;
-  }
-
-  update(id: number, updateItemDto: UpdateItemDto) {
-    return `This action updates a #${id} item`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} item`;
+    return this.findAll(pageable, where);
   }
 }

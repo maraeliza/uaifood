@@ -1,26 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrderitemDto } from './dto/create-orderitem.dto';
-import { UpdateOrderitemDto } from './dto/update-orderitem.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { BaseService } from 'src/common/base.service';
+import { OrderItem } from 'generated/prisma';
 
 @Injectable()
-export class OrderitemService {
-  create(createOrderitemDto: CreateOrderitemDto) {
-    return 'This action adds a new orderitem';
+export class OrderItemService extends BaseService<
+  OrderItem,
+  PrismaService['orderItem']
+> {
+  constructor(prisma: PrismaService) {
+    super(prisma, prisma.orderItem);
   }
 
-  findAll() {
-    return `This action returns all orderitem`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} orderitem`;
-  }
-
-  update(id: number, updateOrderitemDto: UpdateOrderitemDto) {
-    return `This action updates a #${id} orderitem`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} orderitem`;
+  async findAllOrderItemsByOrder(orderId: number) {
+    return this.findAll({ page: 1, limit: 100 }, { orderId });
   }
 }

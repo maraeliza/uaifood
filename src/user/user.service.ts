@@ -1,81 +1,47 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { User } from './entities/user.entity';
+import { BaseService } from '../common/base.service';
+import { PageableDto } from '../pagination/pageable.dto';
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+export class UserService extends BaseService<User, PrismaService['user']> {
+  constructor(prisma: PrismaService) {
+    super(prisma, prisma.user);
+  }
 
-  // ✅ CREATE
-  async create(createUserDto: CreateUserDto) {
-    const { name, phone, password, addressId } = createUserDto;
-
-    const addressExists = await this.prisma.address.findUnique({
-      where: { id: addressId },
-    });
-
-    if (!addressExists) {
-      throw new NotFoundException(`Endereço com id ${addressId} não encontrado`);
-    }
-
+  async createUser(data: CreateUserDto) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
     return this.prisma.user.create({
       data: {
-        name,
-        phone,
-        password,
-        address: { connect: { id: addressId } },
-      },
-      include: { address: true },
-    });
-  }
-
-  findAll() {
-    return this.prisma.user.findMany({
-      include: { address: true },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  // ✅ READ - Um só
-  async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        address: true,
-        clientOrders: true,
-        createdOrders: true,
-      },
-    });
-
-    if (!user) throw new NotFoundException(`Usuário ${id} não encontrado`);
-
-    return user;
-  }
-
-  // ✅ UPDATE
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    const { addressId, ...data } = updateUserDto;
-
-    const existing = await this.prisma.user.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException(`Usuário ${id} não encontrado`);
-
-    return this.prisma.user.update({
-      where: { id },
-      data: {
         ...data,
-        ...(addressId && { address: { connect: { id: addressId } } }),
+        password: hashedPassword,
       },
-      include: { address: true },
+    });
+  }
+  async findByEmail(email: string): Promise<User | null> {
+    if (!email) return null;
+
+    return this.delegate.findUnique({
+      where: { email },
     });
   }
 
-  async remove(id: number) {
-    const existing = await this.prisma.user.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException(`Usuário ${id} não encontrado`);
+  async findAllUsers(
+    pageable: PageableDto,
+    filters?: { name?: string; phone?: string },
+  ) {
+    const where = {
+      name: filters?.name
+        ? { contains: filters.name, mode: 'insensitive' }
+        : undefined,
+      phone: filters?.phone
+        ? { contains: filters.phone, mode: 'insensitive' }
+        : undefined,
+    };
 
-    return this.prisma.user.delete({
-      where: { id },
-    });
+    return this.findAll(pageable, where);
   }
 }

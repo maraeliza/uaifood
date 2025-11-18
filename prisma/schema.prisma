@@ -85,6 +85,7 @@ model Item {
 model User {
   id        Int      @id @default(autoincrement())
   name      String
+  email     String @unique @default("email@exemplo.com")
   address   Address  @relation(fields: [addressId], references: [id])
   addressId Int
   phone     String

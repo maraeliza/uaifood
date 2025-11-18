@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAddressDto } from './dto/create-address.dto';
-import { UpdateAddressDto } from './dto/update-address.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Address } from './entities/address.entity';
+import { PageableDto } from 'src/pagination/pageable.dto';
+import { AddressFilterDto } from './dto/filter-address.dto';
+import { BaseService } from 'src/common/base.service';
 
 @Injectable()
-export class AddressService {
-  create(createAddressDto: CreateAddressDto) {
-    return 'This action adds a new address';
+export class AddressService extends BaseService<
+  Address,
+  PrismaService['address']
+> {
+  constructor(prisma: PrismaService) {
+    super(prisma, prisma.address);
   }
 
-  findAll() {
-    return `This action returns all address`;
-  }
+  async findAllAddresses(pageable: PageableDto, filters: AddressFilterDto) {
+    const where = {
+      street: filters.street
+        ? { contains: filters.street, mode: 'insensitive' }
+        : undefined,
+      city: filters.city
+        ? { contains: filters.city, mode: 'insensitive' }
+        : undefined,
+      state: filters.state ?? undefined,
+    };
 
-  findOne(id: number) {
-    return `This action returns a #${id} address`;
-  }
-
-  update(id: number, updateAddressDto: UpdateAddressDto) {
-    return `This action updates a #${id} address`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} address`;
+    return this.findAll(pageable, where);
   }
 }

@@ -7,5 +7,4 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect();
     console.log('✅ Prisma conectado ao banco de dados');
   }
-
 }

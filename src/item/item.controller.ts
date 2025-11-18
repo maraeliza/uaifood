@@ -1,34 +1,40 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Query, Get, Controller, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { PageableDto, PageDto } from '../pagination/pageable.dto';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { BaseController } from '../common/base.controller';
+import { Item } from './entities/item.entity';
 
-@Controller('item')
-export class ItemController {
-  constructor(private readonly itemService: ItemService) {}
+class FindAllItemsDto extends PageableDto {
+  constructor(partial: Partial<FindAllItemsDto>) {
+    super();
+    Object.assign(this, partial);
+  }
+  description?: string;
+  categoryId?: number;
+}
 
-  @Post()
-  create(@Body() createItemDto: CreateItemDto) {
-    return this.itemService.create(createItemDto);
+@ApiTags('Items')
+@Controller('items')
+export class ItemController extends BaseController<
+  Item,
+  CreateItemDto,
+  UpdateItemDto
+> {
+  constructor(private readonly itemService: ItemService) {
+    super(itemService, 'Item');
   }
 
   @Get()
-  findAll() {
-    return this.itemService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.itemService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateItemDto: UpdateItemDto) {
-    return this.itemService.update(+id, updateItemDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.itemService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Lista todos os itens de forma paginada',
+    type: PageDto,
+  })
+  async findAll(@Query() query: FindAllItemsDto) {
+    const { page, limit, ...filters } = query;
+    return this.itemService.findAllItems({ page, limit }, filters);
   }
 }

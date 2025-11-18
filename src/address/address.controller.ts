@@ -1,34 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Query, Get, Controller, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiOkResponse } from '@nestjs/swagger';
+import { PageableDto, PageDto } from '../pagination/pageable.dto';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
-import { UpdateAddressDto } from './dto/update-address.dto';
+import { BaseController } from 'src/common/base.controller';
 
-@Controller('address')
-export class AddressController {
-  constructor(private readonly addressService: AddressService) {}
+class FindAllAddressesDto extends PageableDto {
+  constructor(partial: Partial<FindAllAddressesDto>) {
+    super();
+    Object.assign(this, partial);
+  }
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}
 
-  @Post()
-  create(@Body() createAddressDto: CreateAddressDto) {
-    return this.addressService.create(createAddressDto);
+@Controller('addresses')
+export class AddressController extends BaseController<CreateAddressDto> {
+  constructor(private readonly addressService: AddressService) {
+    super(addressService);
   }
 
   @Get()
-  findAll() {
-    return this.addressService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.addressService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
-    return this.addressService.update(+id, updateAddressDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.addressService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Listar endereços de forma paginada',
+    type: PageDto,
+  })
+  async findAll(@Query() query: FindAllAddressesDto) {
+    const { page, limit, ...filters } = query;
+    return this.addressService.findAllAddresses({ page, limit }, filters);
   }
 }

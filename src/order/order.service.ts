@@ -24,6 +24,6 @@ export class OrderService extends BaseService<Order, PrismaService['order']> {
         : undefined,
     };
 
-    return this.findAll(pageable, where);
+    return this.findPagered(pageable, where);
   }
 }

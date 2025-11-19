@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Item } from './entities/item.entity';
 import { PageableDto } from '../pagination/pageable.dto';
 import { BaseService } from '../common/base.service';
+import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class ItemService extends BaseService<Item, PrismaService['item']> {
@@ -20,7 +21,16 @@ export class ItemService extends BaseService<Item, PrismaService['item']> {
         : undefined,
       categoryId: filters?.categoryId ?? undefined,
     };
-
-    return this.findAll(pageable, where);
+    const include: Prisma.ItemInclude = {
+      category: {
+        select: {
+          description: true,
+          color: true,
+          id: true
+        },
+      },
+    };
+    const orderBy: Prisma.Enumerable<any> = { id: 'asc' };
+    return this.findPagered(pageable, where, orderBy, include);
   }
 }

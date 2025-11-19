@@ -28,7 +28,7 @@ export class AddressController extends BaseController<CreateAddressDto> {
     description: 'Listar endereços de forma paginada',
     type: PageDto,
   })
-  async findAll(@Query() query: FindAllAddressesDto) {
+  async findPagered(@Query() query: FindAllAddressesDto) {
     const { page, limit, ...filters } = query;
     return this.addressService.findAllAddresses({ page, limit }, filters);
   }

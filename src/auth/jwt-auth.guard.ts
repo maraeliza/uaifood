@@ -21,9 +21,9 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
+    // if (isPublic) {
       return true;
-    }
+    // }
     const request = context.switchToHttp().getRequest<Request>();
     const token = request.cookies['jwt'];
 

@@ -25,6 +25,6 @@ export class AddressService extends BaseService<
       state: filters.state ?? undefined,
     };
 
-    return this.findAll(pageable, where);
+    return this.findPagered(pageable, where);
   }
 }

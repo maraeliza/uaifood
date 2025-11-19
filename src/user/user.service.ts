@@ -42,6 +42,6 @@ export class UserService extends BaseService<User, PrismaService['user']> {
         : undefined,
     };
 
-    return this.findAll(pageable, where);
+    return this.findPagered(pageable, where);
   }
 }

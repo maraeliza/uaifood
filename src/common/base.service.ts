@@ -19,19 +19,26 @@ export class BaseService<
     protected delegate: TDelegate,
   ) {}
 
-  async findAll(
+  async findPagered(
     pageable: PageableDto,
     where?: Prisma.Enumerable<any>,
     orderBy: Prisma.Enumerable<any> = { id: 'asc' },
+    include?: any,
   ): Promise<PageDto<TModel>> {
     try {
       const { skip, take, page, limit } = getPagination(
         pageable.page,
         pageable.limit,
       );
-
+      const findOptions: Prisma.ItemFindManyArgs = {
+        where,
+        skip,
+        take,
+        orderBy,
+        ...(include && { include }),
+      };
       const [data, total] = await Promise.all([
-        this.delegate.findMany({ where, skip, take, orderBy }),
+        this.delegate.findMany(findOptions),
         this.delegate.count({ where }),
       ]);
 
@@ -94,6 +101,21 @@ export class BaseService<
       );
     }
   }
+  async findAll(): Promise<TModel[]> {
+    try {
+      const entities = await this.delegate.findMany();
+
+      return entities;
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          message: 'Erro ao buscar registros',
+          detail: error?.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async create(data: any): Promise<TModel> {
     try {
@@ -101,7 +123,7 @@ export class BaseService<
     } catch (error: any) {
       if (error.code === 'P2002') {
         throw new HttpException(
-          { message: 'Já existe um registro com os mesmos dados únicos.' },
+          { message: 'Já existe um registro com esses dados' },
           HttpStatus.CONFLICT,
         );
       }
@@ -135,7 +157,8 @@ export class BaseService<
 
   async update(where: any, data: any): Promise<TModel> {
     try {
-      return await this.delegate.update({ where, data });
+      const dataWithUpdated = { ...data, updatedAt: new Date() };
+      return await this.delegate.update({ where, data: dataWithUpdated });
     } catch (error: any) {
       if (error.code === 'P2025') {
         throw new HttpException(
@@ -167,6 +190,15 @@ export class BaseService<
         throw new HttpException(
           { message: 'Registro não encontrado para exclusão' },
           HttpStatus.NOT_FOUND,
+        );
+      }
+      if (error.code === 'P2003') {
+        throw new HttpException(
+          {
+            message:
+              'Não é possível excluir este registro, pois ele está vinculado a outro item.',
+          },
+          HttpStatus.BAD_REQUEST,
         );
       }
       throw new HttpException(

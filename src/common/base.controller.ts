@@ -24,13 +24,18 @@ export class BaseController<TModel, TCreateDto = any, TUpdateDto = any> {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query() query: any) {
+  async findPagered(@Query() query: any) {
     const { page, limit, ...filters } = query;
     const pageable: PageableDto = {
       page: Number(page) || 1,
       limit: Number(limit) || 10,
     };
-    return this.service.findAll(pageable, filters);
+    return this.service.findPagered(pageable, filters);
+  }
+  @Get('/all')
+  @HttpCode(HttpStatus.OK)
+  async findAll() {
+    return this.service.findAll();
   }
 
   @Get(':id')

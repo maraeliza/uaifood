@@ -25,7 +25,7 @@ export class UserController extends BaseController<
     description: 'Lista todos os usuários de forma paginada',
     type: PageDto,
   })
-  async findAll(@Query() query: FindAllUsersDto) {
+  async findPagered(@Query() query: FindAllUsersDto) {
     const { page, limit, ...filters } = query;
     return this.userService.findAllUsers({ page, limit }, filters);
   }

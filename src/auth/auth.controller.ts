@@ -31,7 +31,7 @@ export class AuthController {
     const user = await this.authService.validateUser(body.email, body.password);
     const { access_token } = await this.authService.login(user);
 
-    response.cookie('jwt', access_token, {
+    response.cookie('uaifoodtoken', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 1000 * 60 * 60 * 24,

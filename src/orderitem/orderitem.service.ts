@@ -13,6 +13,6 @@ export class OrderItemService extends BaseService<
   }
 
   async findAllOrderItemsByOrder(orderId: number) {
-    return this.findAll({ page: 1, limit: 100 }, { orderId });
+    return this.findPagered({ page: 1, limit: 100 }, { orderId });
   }
 }

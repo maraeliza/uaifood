@@ -38,8 +38,8 @@ export class OrderItemController extends BaseController<
     description: 'Lista os itens dos pedidos de forma paginada',
     type: PageDto,
   })
-  async findAll(@Query() query: FindAllOrderItemsDto) {
+  async findPagered(@Query() query: FindAllOrderItemsDto) {
     const { page, limit, ...filters } = query;
-    return this.orderItemService.findAll({ page, limit }, filters);
+    return this.orderItemService.findPagered({ page, limit }, filters);
   }
 }

@@ -33,7 +33,7 @@ export class ItemController extends BaseController<
     description: 'Lista todos os itens de forma paginada',
     type: PageDto,
   })
-  async findAll(@Query() query: FindAllItemsDto) {
+  async findPagered(@Query() query: FindAllItemsDto) {
     const { page, limit, ...filters } = query;
     return this.itemService.findAllItems({ page, limit }, filters);
   }

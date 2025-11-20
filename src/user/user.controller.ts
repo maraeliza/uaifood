@@ -1,4 +1,12 @@
-import { Controller, Get, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { BaseController } from '../common/base.controller';
 import { UserService } from './user.service';
@@ -28,5 +36,15 @@ export class UserController extends BaseController<
   async findPagered(@Query() query: FindAllUsersDto) {
     const { page, limit, ...filters } = query;
     return this.userService.findAllUsers({ page, limit }, filters);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Retorna o usuário pelo ID (inclui endereço)',
+    type: User,
+  })
+  async findUserById(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.findUserById(id);
   }
 }

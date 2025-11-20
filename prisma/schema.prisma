@@ -85,16 +85,16 @@ model Item {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique @default("email@exemplo.com")
-  address   Address  @relation(fields: [addressId], references: [id])
-  addressId Int
-  phone     String
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-
-  clientOrders  Order[] @relation("ClientOrders")
-  createdOrders Order[] @relation("CreatedOrders")
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique @default("email@exemplo.com")
+  address       Address  @relation(fields: [addressId], references: [id])
+  addressId     Int
+  phone         String
+  password      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+  role          UserType @default(CLIENT)
+  clientOrders  Order[]  @relation("ClientOrders")
+  createdOrders Order[]  @relation("CreatedOrders")
 }

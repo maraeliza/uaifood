@@ -6,7 +6,9 @@ import {
   IsInt,
   Min,
   IsEmail,
+  IsOptional,
 } from 'class-validator';
+import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -30,13 +32,13 @@ export class CreateUserDto {
   email: string = '';
 
   @ApiProperty({
-    description: 'ID do endereço do usuário',
-    example: 1,
+    description: 'Endereço do usuário (opcional)',
+    required: false,
+    type: () => CreateAddressDto,
   })
-  @IsInt({ message: 'O ID do endereço deve ser um número inteiro.' })
-  @Min(1, { message: 'O ID do endereço deve ser maior que zero.' })
-  addressId: number = 0;
-
+  @IsOptional()
+  address?: CreateAddressDto;
+  
   @ApiProperty({
     description: 'Telefone do usuário',
     example: '+55 11 91234-5678',

@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from './entities/user.entity';
 import { BaseService } from '../common/base.service';
 import { PageableDto } from '../pagination/pageable.dto';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
+import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class UserService extends BaseService<User, PrismaService['user']> {
@@ -12,15 +15,6 @@ export class UserService extends BaseService<User, PrismaService['user']> {
     super(prisma, prisma.user);
   }
 
-  async createUser(data: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    return this.prisma.user.create({
-      data: {
-        ...data,
-        password: hashedPassword,
-      },
-    });
-  }
   async findByEmail(email: string): Promise<User | null> {
     if (!email) return null;
 
@@ -43,5 +37,31 @@ export class UserService extends BaseService<User, PrismaService['user']> {
     };
 
     return this.findPagered(pageable, where);
+  }
+
+  async findUserById(id: number) {
+    const include: Prisma.UserInclude = {
+      address: {
+        select: {
+          id: true,
+          street: true,
+          number: true,
+          city: true,
+          state: true,
+          zipCode: true,
+        },
+      },
+    };
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    return user;
   }
 }

@@ -8,12 +8,14 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { User } from '../user/entities/user.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -36,17 +38,52 @@ export class AuthService {
     };
   }
 
-  async register(createUserDto: CreateUserDto) {
-    const existingUser = await this.userService.findByEmail(
-      createUserDto.email,
-    );
+  async register(data: CreateUserDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
     if (existingUser) {
       throw new BadRequestException('E-mail já cadastrado');
     }
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = await this.userService.create({
-      ...createUserDto,
-      password: hashedPassword,
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    let addressData;
+    if (data.address) {
+      addressData = await this.prisma.address.create({
+        data: {
+          street: data.address.street || '',
+          number: data.address.number || '',
+          district: data.address.district || '',
+          city: data.address.city || '',
+          state: data.address.state || '',
+          zipCode: data.address.zipCode || '',
+        },
+      });
+    } else {
+      addressData = await this.prisma.address.create({
+        data: {
+          street: '',
+          number: '',
+          district: '',
+          city: '',
+          state: '',
+          zipCode: '',
+        },
+      });
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: hashedPassword,
+        addressId: addressData.id,
+      },
+      include: {
+        address: true,
+      },
     });
 
     return user;

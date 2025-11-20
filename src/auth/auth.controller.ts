@@ -37,7 +37,16 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24,
     });
 
-    return { message: 'Login realizado com sucesso' };
+    return {
+      message: 'Login realizado com sucesso',
+      access_token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
   @Public()

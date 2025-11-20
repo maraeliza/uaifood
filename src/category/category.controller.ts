@@ -8,7 +8,7 @@ import {
   Post,
   Body,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PageableDto, PageDto } from '../pagination/pageable.dto';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -36,15 +36,19 @@ export class CategoryController extends BaseController<
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({
+  @ApiOperation({
     description: 'Lista todas as categorias de forma paginada',
-    type: PageDto,
+    summary: "Busca de categorias"
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Categoria buscada com sucesso.',
+    type: CreateCategoryDto,
   })
   async findPagered(@Query() query: FindAllCategoriesDto) {
     const { page, limit, ...filters } = query;
     return this.categoryService.findAllCategories({ page, limit }, filters);
   }
-  
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({
